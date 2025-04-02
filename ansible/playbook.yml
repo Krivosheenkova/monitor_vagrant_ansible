@@ -1,0 +1,6 @@
+---
+- hosts: all
+  roles:
+    - node_exporter
+    - docker
+    - prometheus_grafana

@@ -1,0 +1,51 @@
+- name: Check if node_exporter binary exists
+  ansible.builtin.stat:
+    path: "{{ node_exporter_bin_path }}"
+  register: node_exporter_binary
+  
+- name: Get node_exporter from source
+  block:
+    - name: node_exporter | Download and unarchive
+      ansible.builtin.unarchive:
+        src: "{{ node_exporter_source }}"
+        dest: /tmp/
+        remote_src: true
+
+    - name: node_exporter | Copy binary
+      ansible.builtin.copy:
+        src: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+        dest: "{{ node_exporter_bin_path }}"
+        remote_src: true
+        owner: root
+        group: root
+        mode: '0755'
+  when: not node_exporter_binary.stat.exists
+
+- name: Create node_exporter group
+  ansible.builtin.group:
+    name: node_exporter
+    state: present
+
+- name: Create node_exporter_group
+  ansible.builtin.user:
+    name: node_exporter
+    state: present
+    create_home: false
+    group: node_exporter
+    append: true
+    shell: /bin/false
+  
+- name: Copy node_exporterd systemd service file
+  ansible.builtin.copy:
+    src: ./systemd/node_exporterd.service
+    dest: /etc/systemd/system/node_exporterd.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable and start node_exporterd.service
+  ansible.builtin.service:
+    name: node_exporterd
+    state: started
+    enabled: true
+    daemon_reload: true

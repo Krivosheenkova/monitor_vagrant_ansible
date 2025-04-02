@@ -1,0 +1,55 @@
+- name: Ensure Prometheus directory exists
+  ansible.builtin.file:
+    path: ./prometheus
+    state: directory
+    mode: '0755'
+
+- name: Copy Prometheus config file
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: prometheus/prometheus.yml
+    mode: '0644'
+  notify: Restart prometheus container
+
+- name: Ensure Grafana provisioning directories exist
+  ansible.builtin.file:
+    path: "{{ grafana_provisioning_dir }}/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - datasources
+    - dashboards
+
+- name: Template Grafana datasource provisioning file
+  ansible.builtin.template:
+    src: grafana-datasource.yml.j2
+    dest: "{{ grafana_provisioning_dir }}/datasources/prometheus.yml"
+    mode: "0644"
+  notify: Restart grafana container
+
+- name: Download Node Exporter Full Dashboard for Grafana
+  ansible.builtin.get_url:
+    url: "{{ grafana_dashboard_url }}"
+    dest: "{{ grafana_provisioning_dir }}/dashboards/node-exporter-full.json"
+    mode: '0644'
+  notify: Restart grafana container
+
+- name: Copy Grafana dashboards.yml
+  ansible.builtin.copy:
+    src: provisioning/dashboards/dashboards.yml
+    dest: "{{ grafana_provisioning_dir }}/dashboards/dashboards.yml"
+    mode: "0644"
+  notify: Restart grafana container
+
+- name: Ensure docker-compose.yml is present
+  ansible.builtin.template:
+     src: docker-compose.yml.j2
+     dest: ./docker-compose.yml
+     mode: '0644'
+
+- name: Ensure prometheus and grafana containers are running
+  community.docker.docker_compose_v2:
+    project_src: ./
+    files:
+      - docker-compose.yml
+    state: present

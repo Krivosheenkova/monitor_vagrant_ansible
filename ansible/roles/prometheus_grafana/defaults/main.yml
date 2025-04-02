@@ -1,0 +1,9 @@
+prometheus_image: prom/prometheus:latest
+prometheus_url: http://prometheus:9090
+prometheus_scrap_target: localhost:9090
+
+grafana_image: grafana/grafana:latest
+grafana_admin_passwd: "admin"
+grafana_provisioning_dir: grafana/provisioning
+
+grafana_dashboard_url: https://grafana.com/api/dashboards/1860/revisions/37/download 
