@@ -31,7 +31,8 @@
     name: node_exporter
     state: present
     create_home: false
-    group: node_exporter
+    groups: 
+      - node_exporter
     append: true
     shell: /bin/false
   
