@@ -4,10 +4,23 @@
     mode: "0755"
     path: /etc/apt/keyrings
 
-- name: Apt update
+- name: Ensure dpkg installed
+  ansible.builtin.apt:
+    name: dpkg
+    state: present
+
+- name: Delete old kernel images to free /boot partition to be able to upgrade
+  become_user: root
+  ansible.builtin.shell:
+    cmd: dpkg -l linux-image* | grep ii | grep -v `uname -r` | awk '{ print $2 }' | xargs apt -y purge
+
+- name: Update APT cache
   ansible.builtin.apt:
     update_cache: true
-    upgrade: safe
+
+- name: APT upgrade
+  ansible.builtin.apt:
+    upgrade: dist
 
 - name: Get key to Docker's APT repo
   ansible.builtin.get_url:
@@ -35,7 +48,7 @@
     state: started
     enabled: true
 
-- name: Ensure docker users are added to the docker group.
+- name: Ensure docker users are added to the docker group
   ansible.builtin.user:
     name: "{{ item }}"
     groups: docker
