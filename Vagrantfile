@@ -9,9 +9,10 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest: 9090, host: 9090 # Prometheus
   config.vm.network "forwarded_port", guest: 9100, host: 9100 # node_exporter
 
-
+  config.vm.synced_folder ".", "/vagrant"
   config.vm.provision :ansible do |ansible|
     ansible.playbook = "./ansible/playbook.yml"
+    ansible.verbose = "vv"
     ansible.become = true
   end
   
